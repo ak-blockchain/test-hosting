@@ -1,30 +1,3 @@
-<!--
-
-  https://docs.moralis.io/moralis-server/web3-sdk/account 
-    could just get this and show how much you have left to contribute 
-  https://moralis.io/how-to-build-with-the-covalent-api/ covalent api including events
-
-  0) Contribute contributes ()
-  1) Figure out how to calculate contributed so far ()
-    1a) since its slow, see if tx was successful and update accordingly? (no need)
-  2) Figure out how to get wallet balance ()
-  3) Then get a function to work out max using those ()
-  4) Get that number shown when they press max or put too big a number (semi)
-  5) Figure out 'raised so far' ()
-  6) Style contribute button 
-  7) Link contribute button 
-  8) Add error messages for, say insufficient balance etc 
-
-  ToDos
-  What about ensuring correct chain? 
-
-  Things to remember
-  Change chain id in getBalance etc to FTM
-  Change starting block number on transfers to an approporiate one for FTM 
-
-
-
--->
 
 <html>
   <head>
@@ -183,8 +156,10 @@
       var amountContributed = 0.0;
       Moralis.start({ serverUrl, appId });
 
+
+
       async function login() {
-       // logOut()
+        logOut()
         let user = Moralis.User.current();
         if (!user) {
           user = await Moralis.Web3.authenticate();
@@ -257,8 +232,8 @@
         const balance = await Moralis.Web3API.account.getNativeBalance(options);
 
         userBalance = parseFloat(balance["balance"])/1000000000000000000
-        console.log(userAddress)
-        const covalentOptions = {chainId: "56", address: "0xeb49F4dcF810654A7b3cc719918fEEBC6e317132", tokenAddress: "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd"}
+        console.log("user address",userAddress)
+        const covalentOptions = {chainId: "56", address: userAddress, tokenAddress: "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd"}
         answer = await Moralis.Plugins.covalent.getErc20TokenTransfersForAddress(covalentOptions);
         console.log("moralis erc20 token transfers",answer)
       }
@@ -346,6 +321,10 @@
 
       //get stats on page load
       getStats();
+      let user = Moralis.User.current();
+      if(user) {
+        userAddress = user.attributes.ethAddress;
+      }
 
     </script>
   </body>
