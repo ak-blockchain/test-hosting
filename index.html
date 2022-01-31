@@ -1,0 +1,352 @@
+<!--
+
+  https://docs.moralis.io/moralis-server/web3-sdk/account 
+    could just get this and show how much you have left to contribute 
+  https://moralis.io/how-to-build-with-the-covalent-api/ covalent api including events
+
+  0) Contribute contributes ()
+  1) Figure out how to calculate contributed so far ()
+    1a) since its slow, see if tx was successful and update accordingly? (no need)
+  2) Figure out how to get wallet balance ()
+  3) Then get a function to work out max using those ()
+  4) Get that number shown when they press max or put too big a number (semi)
+  5) Figure out 'raised so far' ()
+  6) Style contribute button 
+  7) Link contribute button 
+  8) Add error messages for, say insufficient balance etc 
+
+  ToDos
+  What about ensuring correct chain? 
+
+  Things to remember
+  Change chain id in getBalance etc to FTM
+  Change starting block number on transfers to an approporiate one for FTM 
+
+
+
+-->
+
+<html>
+  <head>
+    <!-- Moralis SDK code -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="https://unpkg.com/moralis/dist/moralis.js"></script>
+
+    <style>
+      body {
+        background-color: #FFFAEF;
+        font-family: "Luminari";
+        color:rgba(0, 0, 0, 0.7);
+        justify-content: center;
+        display: flex;
+      }
+
+      #centralBox {
+        display : block;
+        justify-content: center;
+        margin-top: 100px;
+      }
+
+      #btn-login {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+      }
+      #btn-logout {
+        position: absolute;
+        left: 70%;
+        top: 10%
+      }
+      .btn-link {
+        background-color: transparent;
+        border-width: 0px;
+        font-family: "Luminari";
+        font-size: large;
+        margin-left: 17px;
+      }
+      .btn-link:hover {
+        cursor:pointer;
+        color: #E9D178;
+      }
+ 
+      .inputButton {
+        height: 40px;
+        width: 350px;
+        border-radius: 10px 0px 0px 10px;
+        box-shadow: 10px;
+        border-style: solid;
+        border-width: 1px;
+        float: left;
+        font-family: "Luminari";
+        font-size: large;
+        background-color: #FFFAEF;
+        box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.16);
+        padding-left: 10px;
+      }
+      #btn-max {
+        height: 40px;
+        width: 60px;
+        border-radius: 0px 10px 10px 0px;
+        border-style: solid;
+        border-width: 1px;
+        font-size: large;
+        font-family: "Luminari";
+        background-color: #C9B466;
+        box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.16);
+      }
+      #btn-max:hover {
+        background-color: #E9D178;
+        cursor:pointer;
+      }
+      .rounded-click {
+        height: 35px;
+        background-color: #C9B466;
+        border-radius: 20px 20px 20px 20px;
+        border-width: 0px;
+        font-family: "Luminari";
+        font-size: large;
+        margin: 0 auto;
+      }
+      .rounded-click:hover {
+        background-color: #E9D178;
+        cursor:pointer;
+        font-family: "Luminari";
+        font-size: large;
+      }
+      #error-message {
+        font-size:medium;
+        color: rgb(252, 60, 17)
+      }
+
+    </style>
+
+  </head>
+  <body>
+
+    <button id="btn-login" class="rounded-click" style="width: 100px">Connect</button>
+    <div style="position: absolute; right: 150px; top: 20px">
+      <button class="btn-link">Discord</button>
+      <button class="btn-link">Telegram</button>
+      <button class="btn-link">FTMScan</button>
+    </div>
+
+    <img src="demeter.png" style="transform: rotate(40deg); position: absolute; left: 50%; top: 300px; margin-left: -600px; width: 400px">
+    <img src="demeter.png" style="transform: rotate(-30deg); position: absolute; left: 50%; top: 400px; margin-left: 200px; width: 200px">
+    <img src="accessory.png" style="transform: rotate(40deg); position: absolute; left: 50%; top: 40px; margin-left: -450px; width: 150px">
+
+   <!-- <button id="btn-logout" class="rounded-click" style="width: 100px">Disconnect</button> -->
+
+
+    <div id = "centralBox">
+      <h1 style="color: #C9B466;">Demeter Contribution dApp</h1>
+      <div style="display: flex; justify-content: center;">
+        <h2 id="raised-sofar">Raised So Far: 0.0/25000.0 FTM</h2>
+      </div>
+
+      <div>
+        <input type="text" id="contribution" placeholder="0.0" class="inputButton">
+        <button id="btn-max">MAX</button>
+      </div>
+      <br>
+      
+      <div style="display: flex; justify-content: center;">
+        <button id="btn-contribute" class="rounded-click" style="width: 140px">Contribute</button>
+      </div>
+
+      
+      <div style="display: flex; justify-content: center;">
+        <h3 id="error-message"></h3>
+      </div>
+      
+      <div style="display: flex; justify-content: center; ">
+        <div style="display: block">
+        <h2 id="your-contribution">Your contribution: 0.0 FTM</h2>
+        <h2 id="max-contribution">Max contribution: 250.0 FTM</h2>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: center; padding: 0px; margin: 0px">
+        
+      </div>
+      
+    </div>
+    <br><br>
+    <!-- <h3 id="test-balance">Balance: </h3> -->
+
+    <script>
+      // connect to Moralis server
+      const serverUrl = "https://5x5obs0uvmdg.usemoralis.com:2053/server";
+      const appId = "olqVr4tjPYSVCxhGktkNkNaJc9r7JnlIb5XvcCZW";
+      const CONT_MAX = 250.0
+      var userAddress = "";
+      var userBalance = 0.0;
+      var amountContributed = 0.0;
+      Moralis.start({ serverUrl, appId });
+
+      async function login() {
+       // logOut()
+        let user = Moralis.User.current();
+        if (!user) {
+          user = await Moralis.Web3.authenticate();
+        }
+        userAddress = user.attributes.ethAddress;
+        getStats();
+      }
+
+      async function logOut() {
+        await Moralis.User.logOut();
+        console.log("logged out");
+      }
+
+      // bind button click handlers
+      document.getElementById("btn-login").onclick = login;
+      document.getElementById("btn-contribute").onclick = contribute; 
+      document.getElementById("btn-max").onclick = onMaxButton; 
+
+      function getStats() {
+        const user = Moralis.User.current();
+        if (user) {
+          getUserTransactions(user);
+          calculateUserBalance(); 
+          calculateIndividualContribution();
+        }
+        calculateTotalContributed();
+      }
+
+      async function getUserTransactions(user) {
+        // create query
+        const query = new Moralis.Query("EthTransactions");
+        query.equalTo("from_address", user.get("ethAddress"));
+
+        // subscribe to query updates ** add this**
+        const subscription = await query.subscribe();
+        handleNewTransaction(subscription);
+
+        // run query
+        const results = await query.find();
+        console.log("user transactions:", results);
+      }
+
+      async function handleNewTransaction(subscription) {
+        // log each new transaction
+        subscription.on("create", function(data) {
+          console.log("new transaction: ", data);
+        });
+      }
+
+      function renderYourContribution(contributionInt) {
+        const contributionString = document.getElementById("your-contribution");
+        var contributionQuantity = contributionInt;
+        var contributionQuantityAsString = contributionQuantity.toFixed(1);
+        contributionString.innerHTML = "Your Contribution: "+contributionQuantityAsString+" FTM";
+      }
+
+      function renderTotalRaised(data) {
+        console.log("raised",data)
+        const totalString = document.getElementById("raised-sofar");
+        var contributionQuantityAsString = data.toFixed(1);
+        if(isNaN(data)) {
+          contributionQuantityAsString = "0.0"
+        }
+        totalString.innerHTML = "Raised So Far: "+contributionQuantityAsString+"/25000 FTM";
+      }
+
+      async function calculateUserBalance() {
+        // get BSC testnet native balance 
+        const options = { chain: "0x61"/*, address:"0xeb49F4dcF810654A7b3cc719918fEEBC6e317132"*/};
+        const balance = await Moralis.Web3API.account.getNativeBalance(options);
+
+        userBalance = parseFloat(balance["balance"])/1000000000000000000
+        console.log(userAddress)
+        const covalentOptions = {chainId: "56", address: "0xeb49F4dcF810654A7b3cc719918fEEBC6e317132", tokenAddress: "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd"}
+        answer = await Moralis.Plugins.covalent.getErc20TokenTransfersForAddress(covalentOptions);
+        console.log("moralis erc20 token transfers",answer)
+      }
+
+      async function calculateIndividualContribution() {
+        
+        const options = { chain: "0x61", from_block: "16229809" };
+        const transfers = await Moralis.Web3API.account.getTransactions(options); 
+        
+        var value = 0;
+
+        for(var tx of transfers['result']) {
+          if(tx['to_address'] === "0x7c0670ca681c47bfd54fd38c2187a26198aeb114") {
+            value+= parseInt(tx['value'])
+          }
+        }
+        console.log("individual contributed",value)
+        console.log("also this",transfers)
+        var valueReduced = value/1000000000000000000
+        amountContributed = valueReduced; 
+        renderYourContribution(valueReduced)
+      }
+
+      async function calculateTotalContributed() {
+        const options = { chain: "0x61", address:"0x7c0670ca681c47bfd54fd38c2187a26198aeb114"};
+        const balance = await Moralis.Web3API.account.getNativeBalance(options); 
+        console.log("balance string?",balance)
+
+        var balanceAsInt = parseInt(balance["balance"]);
+        console.log("balance",balanceAsInt)
+
+        balanceAsInt = balanceAsInt/1000000000000000000
+        balanceAsInt = Math.min(balanceAsInt, 25000)
+        renderTotalRaised(balanceAsInt);
+      }
+      
+      function onMaxButton() {
+        maxToContribute = 250 - amountContributed;
+        let max = Math.min(userBalance, maxToContribute);
+        document.getElementById("contribution").value = max;
+      }
+
+      function renderErrorMessage(message) {
+        errorText = document.getElementById("error-message")
+        errorText.innerHTML = message
+      }
+
+      function contribute() {
+        const user = Moralis.User.current();
+        if (user) {
+          const input = document.getElementById("contribution").value
+          var inputAsFloat; 
+          try {
+            inputAsFloat = parseFloat(input)
+          } catch(err) {
+            renderErrorMessage("Could not parse value!");
+            return;
+          }
+          if(!inputAsFloat || isNaN(inputAsFloat)){
+            renderErrorMessage("Not a payable quantity");
+            return; 
+          }
+          console.log("Value!",inputAsFloat)
+          contributeAsync(input); //todo: at the end of the confirmation 'getStats' again 
+        } else {
+          renderErrorMessage("Wallet not connected!")
+        }
+      }
+
+      async function contributeAsync(amountEth) {
+        // sending 0.5 ETH
+        await Moralis.enableWeb3()
+        const options = {type: "native", amount: Moralis.Units.ETH(amountEth), receiver: "0x7C0670Ca681C47bFD54fD38c2187a26198AEB114"}
+        try {
+          let result = await Moralis.transfer(options)
+        } catch(error) {
+          let codeString = error['data']['code']
+          if(codeString = "-32000") {
+            renderErrorMessage("Insufficient funds")
+          }
+        }
+        //provided all is ok:
+        document.getElementById("contribution").value = "";
+      }
+
+      //get stats on page load
+      getStats();
+
+    </script>
+  </body>
+</html>
