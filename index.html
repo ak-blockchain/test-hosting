@@ -1,12 +1,11 @@
 <head>
     <title>Generic dApp</title>
-  <!--  <link rel="stylesheet" href="styles.css"></link>-->
     <link rel="icon" type="image/x-icon" href="assets/generic.png">
 </head>
 
-<body>
+<body style="background-image: url('assets/background.jpg'); background-repeat: no-repeat; background-size: cover; background-position: right center;">
 
-    <img id="mainLogo" src="assets/generic.png">
+    <img id="mainLogo" src="assets/op_logo.png">
 
     <button id="walletCircle">
         <img id="walletImage" src="assets/walletSymbol.png">
@@ -16,23 +15,23 @@
     <div id="menuDiv" style="display: block">
 
         <button id="btn_menu" class="menuButton menuButton_clickable">
-            <img src="assets/home.png" class="menuImage">
+            <img src="assets/dash_white.png" class="menuImage">
             <h2 class="menuText">Dashboard</h2>
         </button>
 
         <button id="btn_account" class="menuButton menuButton_clickable">
-            <img src="assets/account.png" class="menuImage">
+            <img src="assets/acc_white.png" class="menuImage">
             <h2 class="menuText">Account</h2>
         </button>
 
         <button id="btn_calc" class="menuButton menuButton_clickable">
-            <img src="assets/calculator.png" class="menuImage">
+            <img src="assets/calc_white.png" class="menuImage">
             <h2 class="menuText">Calculator</h2>
         </button>
 
         <button id="btn_docs" class="menuButton menuButton_clickable">
-            <img src="assets/generic.png" class="menuImage">
-            <h2 class="menuText">Docs</h2>
+            <img src="assets/op_white.png" class="menuImage">
+            <h2 class="menuText">Website</h2>
         </button>
         
     </div>
@@ -150,10 +149,6 @@
     </div>
 
 
-
-
-
-
     <!-- ACCOUNT -->
     <div id="account" style="display: none;">
 
@@ -244,11 +239,6 @@
     </div>
  
 
-
-
-
-
-
     <!-- CALCULATOR-->
     <div id="calculator" style="display: none;">
        
@@ -315,7 +305,7 @@
           </div>
 
     </div>
-    <script src="obcss.js"></script>
+   <script src="obcss.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
     <script src="https://unpkg.com/moralis/dist/moralis.js"></script>
     <script src="genericDapp.js"></script>
